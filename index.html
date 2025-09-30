@@ -246,6 +246,28 @@
             align-items: center;
             gap: 0.75rem;
         }
+
+        .pause-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            font-size: 3rem;
+            font-weight: bold;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .pause-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
         
         /* Keyboard Help & Empty State */
         .keyboard-help {
@@ -323,7 +345,9 @@
             </div>
             <div class="script-area">
                 <label>Your Script:</label>
-                <textarea id="scriptText" placeholder="Paste your script here...">Welcome to your teleprompter! Paste your script here and click play to start. Use your keyboard: Spacebar to Play/Pause, Arrow keys to adjust speed or jump, R to Reset, and F for Fullscreen.</textarea>
+                <textarea id="scriptText" placeholder="Paste your script here...">Welcome to your teleprompter! Paste your script here and click play to start. 
+[pause-2]
+Use your keyboard: Spacebar to Play/Pause, Arrow keys to adjust speed or jump, R to Reset, and F for Fullscreen.</textarea>
             </div>
         </div>
 
@@ -336,6 +360,9 @@
             </div>
             <div class="teleprompter-text" id="text"></div>
             <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="pause-overlay" id="pauseOverlay">
+                <div id="pauseTimer"></div>
+            </div>
         </div>
 
         <!-- Timer & Controls -->
@@ -365,12 +392,15 @@
     document.addEventListener('DOMContentLoaded', function() {
         // --- State Variables ---
         let isPlaying = false;
+        let isPausedForCommand = false;
+        let pauseCountdown = 0;
         let speed = 1;
         let scrollPosition = 0;
         let animationFrame = null;
         let lastTime = 0;
         let scriptWords = [];
         let wordSpans = [];
+        let pauseCommands = {};
         let currentWordIndex = 0;
         let timerSeconds = 0;
         let timerInterval = null;
@@ -396,6 +426,8 @@
             timerDisplay: document.getElementById('timerDisplay'),
             timerText: document.getElementById('timerText'),
             emptyState: document.getElementById('emptyState'),
+            pauseOverlay: document.getElementById('pauseOverlay'),
+            pauseTimer: document.getElementById('pauseTimer'),
             speedInput: document.getElementById('speed'),
             fontSizeInput: document.getElementById('fontSize'),
             lineHeightInput: document.getElementById('lineHeight'),
@@ -411,8 +443,13 @@
 
         // --- Core Functions ---
         const renderScript = () => {
-            const scriptText = DOMElements.scriptTextArea.value;
-            if (scriptText.trim() === '') {
+            const rawText = DOMElements.scriptTextArea.value;
+            pauseCommands = {};
+            
+            const pauseRegex = /\[pause-(\d+(\.\d+)?)\]/g;
+            const cleanedText = rawText.replace(pauseRegex, '');
+            
+            if (cleanedText.trim() === '') {
                 DOMElements.emptyState.classList.add('visible');
                 DOMElements.textElement.style.display = 'none';
                 scriptWords = [];
@@ -422,9 +459,21 @@
             
             DOMElements.emptyState.classList.remove('visible');
             DOMElements.textElement.style.display = 'block';
-            
-            const scriptTokens = scriptText.split(/(\s+)/);
-            scriptWords = scriptText.split(/\s+/).filter(w => w.length > 0);
+
+            let match;
+            let cumulativeLength = 0;
+            let lastIndex = 0;
+            // First, find where the pauses should be relative to word count
+            while((match = pauseRegex.exec(rawText)) !== null) {
+                const textBeforePause = rawText.substring(lastIndex, match.index);
+                const wordsBefore = textBeforePause.split(/\s+/).filter(w => w.length > 0).length;
+                cumulativeLength += wordsBefore;
+                pauseCommands[cumulativeLength -1] = parseFloat(match[1]);
+                lastIndex = match.index + match[0].length;
+            }
+
+            const scriptTokens = cleanedText.split(/(\s+)/);
+            scriptWords = cleanedText.split(/\s+/).filter(w => w.length > 0);
             
             let html = '';
             let wordCounter = 0;
@@ -469,10 +518,32 @@
             const deltaTime = currentTime - lastTime;
             lastTime = currentTime;
 
+            // Handle inline pause commands
+            if (isPausedForCommand) {
+                pauseCountdown -= deltaTime;
+                DOMElements.pauseTimer.textContent = (pauseCountdown / 1000).toFixed(1);
+                if (pauseCountdown <= 0) {
+                    isPausedForCommand = false;
+                    DOMElements.pauseOverlay.classList.remove('visible');
+                }
+                animationFrame = requestAnimationFrame(animate);
+                return;
+            }
+
             // --- Word Highlight Advancement based on WPM ---
             timeSinceLastWord += deltaTime;
             if (timeSinceLastWord >= timePerWord) {
                 timeSinceLastWord %= timePerWord; 
+                
+                // Check for a pause command *before* advancing the word
+                if(pauseCommands[currentWordIndex]) {
+                    isPausedForCommand = true;
+                    pauseCountdown = pauseCommands[currentWordIndex] * 1000;
+                    DOMElements.pauseOverlay.classList.add('visible');
+                    animationFrame = requestAnimationFrame(animate);
+                    return;
+                }
+
                 if (currentWordIndex < wordSpans.length - 1) {
                     wordSpans[currentWordIndex]?.classList.remove('highlight');
                     currentWordIndex++;
@@ -512,7 +583,7 @@
             
             if (isPlaying) {
                 lastTime = 0;
-                timeSinceLastWord = 0;
+                if (!isPausedForCommand) timeSinceLastWord = 0;
                 if (animationFrame) cancelAnimationFrame(animationFrame);
                 animationFrame = requestAnimationFrame(animate);
                 startTimer();
@@ -525,6 +596,8 @@
         
         const reset = () => {
             if (isPlaying) togglePlay();
+            isPausedForCommand = false;
+            DOMElements.pauseOverlay.classList.remove('visible');
             scrollPosition = 0;
             lastTime = 0;
 
