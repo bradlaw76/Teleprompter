@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teleprompter v2.0.0</title>
+    <title>Teleprompter</title>
     <style>
         /* General Styles */
         * {
@@ -525,6 +525,16 @@ Use your keyboard: Spacebar to Play/Pause, Arrow keys to adjust speed or jump, R
                 if (pauseCountdown <= 0) {
                     isPausedForCommand = false;
                     DOMElements.pauseOverlay.classList.remove('visible');
+                    // After pause, advance to the next word and reset the timer.
+                    if (currentWordIndex < wordSpans.length - 1) {
+                        wordSpans[currentWordIndex]?.classList.remove('highlight');
+                        currentWordIndex++;
+                        wordSpans[currentWordIndex]?.classList.add('highlight');
+                        timeSinceLastWord = 0; // Reset timer for the new word
+                    } else {
+                        togglePlay(); // End of script
+                        return;
+                    }
                 }
                 animationFrame = requestAnimationFrame(animate);
                 return;
@@ -533,16 +543,17 @@ Use your keyboard: Spacebar to Play/Pause, Arrow keys to adjust speed or jump, R
             // --- Word Highlight Advancement based on WPM ---
             timeSinceLastWord += deltaTime;
             if (timeSinceLastWord >= timePerWord) {
-                timeSinceLastWord %= timePerWord; 
-                
-                // Check for a pause command *before* advancing the word
+                 // Check for a pause command *before* advancing the word
                 if(pauseCommands[currentWordIndex]) {
                     isPausedForCommand = true;
                     pauseCountdown = pauseCommands[currentWordIndex] * 1000;
                     DOMElements.pauseOverlay.classList.add('visible');
+                    // Start the pause countdown and let the logic above handle advancement
                     animationFrame = requestAnimationFrame(animate);
                     return;
                 }
+                
+                timeSinceLastWord %= timePerWord; 
 
                 if (currentWordIndex < wordSpans.length - 1) {
                     wordSpans[currentWordIndex]?.classList.remove('highlight');
