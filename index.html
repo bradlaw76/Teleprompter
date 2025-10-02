@@ -175,6 +175,15 @@
         .light .highlight { background: #3b82f6; }
         .contrast .highlight { background: #3b82f6; }
         
+        .pause-indicator::after {
+            content: '❙❙'; /* Unicode pause symbol */
+            font-size: 0.8em;
+            color: #facc15; /* Yellow-400 */
+            margin-left: 0.5ch;
+            vertical-align: middle;
+            opacity: 0.9;
+        }
+
         /* Progress Bar */
         .progress-bar {
             position: fixed;
@@ -447,9 +456,8 @@ Use your keyboard: Spacebar to Play/Pause, Arrow keys to adjust speed or jump, R
             pauseCommands = {};
             
             const pauseRegex = /\[pause-(\d+(\.\d+)?)\]/g;
-            const cleanedText = rawText.replace(pauseRegex, '');
             
-            if (cleanedText.trim() === '') {
+            if (rawText.trim() === '') {
                 DOMElements.emptyState.classList.add('visible');
                 DOMElements.textElement.style.display = 'none';
                 scriptWords = [];
@@ -472,6 +480,7 @@ Use your keyboard: Spacebar to Play/Pause, Arrow keys to adjust speed or jump, R
                 lastIndex = match.index + match[0].length;
             }
 
+            const cleanedText = rawText.replace(pauseRegex, '');
             const scriptTokens = cleanedText.split(/(\s+)/);
             scriptWords = cleanedText.split(/\s+/).filter(w => w.length > 0);
             
@@ -481,7 +490,9 @@ Use your keyboard: Spacebar to Play/Pause, Arrow keys to adjust speed or jump, R
                 if (/\s+/.test(token)) {
                     html += token.replace(/\n/g, '<br>');
                 } else if (token) {
-                    html += `<span data-word-index="${wordCounter}">${token}</span>`;
+                    const isPauseIndicator = pauseCommands.hasOwnProperty(wordCounter);
+                    const pauseClass = isPauseIndicator ? ' class="pause-indicator"' : '';
+                    html += `<span data-word-index="${wordCounter}"${pauseClass}>${token}</span>`;
                     wordCounter++;
                 }
             });
