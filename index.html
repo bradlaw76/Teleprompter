@@ -32,7 +32,7 @@
             color: white;
             padding: 1rem;
             z-index: 30;
-            max-height: 50vh;
+            max-height: 80vh; /* Increased from 50vh */
             overflow-y: auto;
             transition: max-height 0.3s ease, padding 0.3s ease;
             flex-shrink: 0;
@@ -135,7 +135,7 @@
             color: white;
             font-family: monospace;
             font-size: 0.875rem;
-            min-height: 8rem;
+            min-height: 16rem; /* Increased from 8rem */
             resize: vertical;
         }
 
@@ -219,7 +219,7 @@
         /* Controls & Timer */
         .floating-controls {
             position: fixed;
-            bottom: 1rem;
+            bottom: 3.5rem; /* Raised to avoid overlap */
             left: 0;
             right: 0;
             display: flex;
@@ -231,6 +231,7 @@
         }
 
         .control-btn {
+            position: relative; /* Needed for tooltip positioning */
             background: rgba(17, 24, 39, 0.8);
             backdrop-filter: blur(5px);
             color: white;
@@ -247,13 +248,33 @@
             transition: background 0.2s, transform 0.1s;
         }
 
+        .control-btn .tooltip {
+            position: absolute;
+            bottom: 110%;
+            background-color: #111827;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+            pointer-events: none;
+        }
+
+        .control-btn:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
         .control-btn:hover { background: #1f2937; }
         .control-btn:active { transform: scale(0.95); }
         .control-btn svg { width: 1.75rem; height: 1.75rem; }
 
         .timer-display {
             position: fixed;
-            bottom: 5.5rem;
+            bottom: 8rem; /* Raised to avoid overlap */
             left: 50%;
             transform: translateX(-50%);
             background: rgba(17, 24, 39, 0.8);
@@ -375,9 +396,37 @@
             </div>
             <div class="script-area">
                 <label>Your Script:</label>
-                <textarea id="scriptText" placeholder="Paste your script here...">Welcome to your teleprompter! Paste your script here and click play to start. 
-[pause-2]
-Use your keyboard: Spacebar to Play/Pause, Arrow keys to adjust speed or jump, R to Reset, and F for Fullscreen.</textarea>
+                <textarea id="scriptText" placeholder="Paste your script here...">Welcome to Teleprompter v2.0.0! This is your guide to all the features. You can delete this text and paste your own script in this box at any time.
+
+**--- HOW IT WORKS ---**
+
+This teleprompter is designed to mimic a professional broadcast setup. As you read, a **blue highlight** will move from word to word at the speed you set. You can even add pauses. For example, the script will pause for 3 seconds after this paragraph.
+[pause-3]
+The yellow pause icon `❙❙` gives you a heads-up before the script pauses and a large countdown appears on screen.
+
+Your job is to keep your eyes on the faint **red line** positioned in the upper part of the screen. The teleprompter will automatically scroll the text to ensure the highlighted word always stays right at that red line, allowing you to read naturally without looking up or down.
+
+**--- MAIN CONTROLS (Bottom Center) ---**
+
+* **Play/Pause (▶/❙❙):** Starts or stops the teleprompter. You can also just click anywhere on the script text to play or pause.
+* **Reset (↺):** Instantly stops the teleprompter and returns the script to the very beginning.
+* **Settings (⚙️):** Opens or closes the settings panel where you can customize your experience.
+
+**--- INLINE PAUSES ---**
+
+You can command the teleprompter to pause automatically within your script.
+
+* **Syntax:** Type `[pause-X]` on its own line, where `X` is the number of seconds you want to pause (e.g., `[pause-5]` or `[pause-0.5]`).
+* **Visual Cue:** A yellow pause icon `❙❙` will appear next to the word right before the pause is scheduled.
+* **Countdown:** When the script reaches the pause, a large countdown timer will appear on screen. The teleprompter will resume automatically when it hits zero.
+
+**--- SETTINGS PANEL ---**
+
+* **Speed:** Controls the reading pace. A speed of 1.0x is a normal pace (about 180 words per minute).
+* **Font Size & Line Height:** Adjust these to make the text larger and increase the spacing between lines for better readability.
+* **Theme:** Choose between Dark, Light, or a High Contrast (yellow/black) mode.
+* **Mirror Mode:** Flips the text horizontally (for use with physical teleprompter mirrors).
+* **Highlight Line:** Toggles the blue word-by-word highlight on or off.</textarea>
             </div>
         </div>
 
@@ -400,14 +449,17 @@ Use your keyboard: Spacebar to Play/Pause, Arrow keys to adjust speed or jump, R
             <span id="timerText">00:00</span>
         </div>
         <div class="floating-controls">
-            <button class="control-btn" id="playBtn">
+            <button class="control-btn" id="playBtn" title="Play/Pause">
+                <span class="tooltip">Play/Pause</span>
                 <svg id="playIcon" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                 <svg id="pauseIcon" fill="currentColor" viewBox="0 0 24 24" style="display:none;"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>
             </button>
-            <button class="control-btn" id="resetBtn">
+            <button class="control-btn" id="resetBtn" title="Reset Script">
+                <span class="tooltip">Reset Script</span>
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
             </button>
-            <button class="control-btn" id="settingsBtn">
+            <button class="control-btn" id="settingsBtn" title="Show/Hide Settings">
+                <span class="tooltip">Show/Hide Settings</span>
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m5.7-11.7 4.2-4.2m-14.1 0 4.2 4.2m10.6 10.6-4.2-4.2m-10.6 0-4.2 4.2"/></svg>
             </button>
         </div>
