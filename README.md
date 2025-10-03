@@ -1,5 +1,3 @@
-Here’s your text reformatted into a clean **GitHub-ready instructions file** (Markdown style). I kept it structured with headings, subheadings, and code-style examples where needed:
-
 ````markdown
 # Teleprompter v2.0.0 Instructions
 
@@ -81,11 +79,3 @@ You can command the teleprompter to **pause automatically** within your script.
 * **Highlight Line**
   Toggles the **blue word-by-word highlight** on/off.
 
----
-
-✅ You’re all set! Start your script, adjust the settings, and let **Teleprompter v2.0.0** handle the smooth scrolling.
-
-```
-
-Do you want me to also add a **Table of Contents** at the top (with clickable anchors) so GitHub users can jump directly to sections?
-```
