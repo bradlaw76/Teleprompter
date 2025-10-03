@@ -54,6 +54,21 @@
             font-weight: bold;
         }
 
+        .attribution-links {
+            font-size: 0.75rem;
+            color: #9ca3af; /* text-gray-400 */
+            margin-top: 0.25rem;
+        }
+
+        .attribution-links a {
+            color: #60a5fa; /* text-blue-400 */
+            text-decoration: none;
+        }
+        
+        .attribution-links a:hover {
+            text-decoration: underline;
+        }
+
         .btn {
             padding: 0.5rem 1rem;
             background: #374151;
@@ -321,7 +336,13 @@
         <!-- Settings Panel -->
         <div class="settings-panel" id="settingsPanel">
             <div class="settings-header">
-                <h1>Teleprompter v2.0.0</h1>
+                <div>
+                    <h1>Teleprompter v2.0.0</h1>
+                    <div class="attribution-links">
+                        <span>By: <a href="https://www.linkedin.com/in/bradlaw/" target="_blank" rel="noopener noreferrer">Bradley Law</a></span> |
+                        <span><a href="https://github.com/bradlaw76/Teleprompter/issues" target="_blank" rel="noopener noreferrer">Report an Issue</a></span>
+                    </div>
+                </div>
                 <button class="btn" id="toggleSettingsBtn">Hide Settings</button>
             </div>
             <!-- Settings content remains the same -->
